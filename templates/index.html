@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hill-Safe | Tall Building Finder</title>
+    <title>Hill-Safe | Emergency Safe Place Locator</title>
     
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
@@ -15,66 +15,334 @@
     <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.3.0/mapbox-gl-directions.css" type="text/css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<!-- HOME PAGE: TOP 10 BUILDINGS LIST -->
-<div class="page-main">
-    <!-- HIDDEN MAP (Required by script for auto-pin on click) -->
-    <div id="map" class="hidden-map"></div>
-
-    <!-- HEADER -->
-    <div class="header">
-        <div class="header-top">
-            <div class="brand">
-                <i class="fas fa-mountain"></i>
-                <div class="brand-text">
-                    <h1>Hill-Safe</h1>
-                    <p>Find Safe Places & Tall Buildings</p>
-                </div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-brand">
+            <div class="brand-icon">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            <div class="brand-info">
+                <h1>Hill-Safe</h1>
+                <span>Emergency Locator</span>
             </div>
         </div>
-
-        <!-- SEARCH BAR -->
-        <div class="search-bar-container">
-            <div class="search-wrapper">
-                <i class="fas fa-search search-icon"></i>
-                <input id="search-input" type="text" placeholder="Search location..." class="search-input" autocomplete="off">
-                <div id="suggestions" class="suggestions-dropdown"></div>
-            </div>
-            <button class="my-location-btn" id="my-location-btn" title="Use my location">
-                <i class="fas fa-location-crosshairs"></i>
+        <div class="nav-actions">
+            <button class="nav-btn" id="about-btn">
+                <i class="fas fa-info-circle"></i>
+                <span>About</span>
+            </button>
+            <button class="nav-btn primary" id="emergency-btn">
+                <i class="fas fa-phone"></i>
+                <span>Emergency</span>
             </button>
         </div>
     </div>
+</nav>
 
-    <!-- MAIN CONTENT - TOP 10 LIST -->
-    <div class="content-wrapper">
-        <div class="top-ten-panel">
-            <div class="details-header">
-                <div class="header-content">
-                    <h2><i class="fas fa-shield-alt"></i> Top Safe Places</h2>
-                    <p>Hospitals, Shelters, High Ground & Tall Buildings</p>
-                </div>
-                <span class="count-badge" id="result-count">0 found</span>
+<!-- MAIN CONTAINER -->
+<div class="main-container">
+    
+    <!-- LEFT PANEL: SEARCH & RESULTS -->
+    <div class="left-panel">
+        
+        <!-- SEARCH SECTION -->
+        <div class="search-section">
+            <div class="search-header">
+                <h2>Find Safe Locations</h2>
+                <p>Search any location to discover nearby safe places within 20 minutes walking distance</p>
             </div>
-
-            <div class="buildings-list" id="building-list">
-                <div class="empty-message">
-                    <i class="fas fa-shield-alt"></i>
-                    <h3>Ready to Find Safety?</h3>
-                    <p>Search for any location and discover safe places like hospitals, shelters, high ground, and tall buildings</p>
-                    <div class="hint-box">
-                        <i class="fas fa-lightbulb"></i> Tip: Click on the map after searching to scan that area
+            
+            <div class="search-controls">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        class="search-input" 
+                        placeholder="Enter location or address..."
+                        autocomplete="off"
+                    />
+                    <div id="suggestions" class="suggestions-dropdown"></div>
+                </div>
+                
+                <button class="location-btn" id="my-location-btn" title="Use my current location">
+                    <i class="fas fa-location-crosshairs"></i>
+                </button>
+            </div>
+            
+            <!-- FILTER CHIPS -->
+            <div class="filter-chips">
+                <button class="chip active" data-filter="all">
+                    <i class="fas fa-list"></i> All
+                </button>
+                <button class="chip" data-filter="hospital">
+                    <i class="fas fa-hospital"></i> Hospitals
+                </button>
+                <button class="chip" data-filter="shelter">
+                    <i class="fas fa-house-circle-check"></i> Shelters
+                </button>
+                <button class="chip" data-filter="high-ground">
+                    <i class="fas fa-mountain"></i> High Ground
+                </button>
+                <button class="chip" data-filter="building">
+                    <i class="fas fa-building"></i> Tall Buildings
+                </button>
+            </div>
+        </div>
+        
+        <!-- RESULTS SECTION -->
+        <div class="results-section">
+            <div class="results-header">
+                <div class="results-info">
+                    <h3>Safe Places</h3>
+                    <span class="results-count" id="result-count">Search to find places</span>
+                </div>
+                <div class="results-actions">
+                    <button class="action-btn" id="whatsapp-share-btn" style="display: none;">
+                        <i class="fab fa-whatsapp"></i>
+                        Share
+                    </button>
+                    <button class="action-btn" id="sort-btn">
+                        <i class="fas fa-sort"></i>
+                        Sort
+                    </button>
+                </div>
+            </div>
+            
+            <div class="results-list" id="building-list">
+                <!-- EMPTY STATE -->
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-map-location-dot"></i>
                     </div>
+                    <h3>Ready to Find Safety</h3>
+                    <p>Search for any location to discover safe places including hospitals, emergency shelters, high ground areas, and tall buildings.</p>
+                    <div class="quick-tips">
+                        <div class="tip-item">
+                            <i class="fas fa-search"></i>
+                            <span>Search any location</span>
+                        </div>
+                        <div class="tip-item">
+                            <i class="fas fa-location-crosshairs"></i>
+                            <span>Use current location</span>
+                        </div>
+                        <div class="tip-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Click on map to scan</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- RIGHT PANEL: MAP -->
+    <div class="right-panel" id="map-panel">
+        <button class="map-close-btn" id="map-close-btn">
+            <i class="fas fa-times"></i>
+        </button>
+        <div id="map" class="map-container"></div>
+        
+        <!-- MAP OVERLAY INFO -->
+        <div class="map-overlay">
+            <div class="overlay-card">
+                <div class="overlay-icon">
+                    <i class="fas fa-route"></i>
+                </div>
+                <div class="overlay-content">
+                    <h4>Navigation Active</h4>
+                    <p>Follow the route to your destination</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MAP LEGEND -->
+        <div class="map-legend">
+            <h4>Building Safety</h4>
+            <div class="legend-item">
+                <div class="legend-marker" style="background: #4CAF50;"></div>
+                <span>Very Safe (3+ floors)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-marker" style="background: #FFA726;"></div>
+                <span>Safe (2 floors)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-marker" style="background: #FF7043;"></div>
+                <span>Caution (Ground+1)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-marker" style="background: #EF5350;"></div>
+                <span>Unsafe (Ground only)</span>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- PLACE DETAILS MODAL -->
+<div class="place-modal" id="place-modal">
+    <div class="place-modal-content">
+        <div class="place-modal-header">
+            <div class="place-modal-title">
+                <h3 id="place-modal-name">Building Name</h3>
+                <span class="badge" id="place-modal-badge">SAFE</span>
+            </div>
+            <button class="modal-close" id="place-modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="place-modal-body">
+            <div class="place-detail-grid">
+                <div class="place-detail-item">
+                    <div class="place-detail-icon">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <div class="place-detail-info">
+                        <h4>Category</h4>
+                        <p id="place-modal-category">Building</p>
+                    </div>
+                </div>
+                <div class="place-detail-item">
+                    <div class="place-detail-icon">
+                        <i class="fas fa-location-dot"></i>
+                    </div>
+                    <div class="place-detail-info">
+                        <h4>Distance</h4>
+                        <p id="place-modal-distance">0m</p>
+                    </div>
+                </div>
+                <div class="place-detail-item" id="place-modal-floors-container">
+                    <div class="place-detail-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="place-detail-info">
+                        <h4>Floors</h4>
+                        <p id="place-modal-floors">2</p>
+                    </div>
+                </div>
+                <div class="place-detail-item" id="place-modal-height-container">
+                    <div class="place-detail-icon">
+                        <i class="fas fa-ruler-vertical"></i>
+                    </div>
+                    <div class="place-detail-info">
+                        <h4>Height</h4>
+                        <p id="place-modal-height">6m</p>
+                    </div>
+                </div>
+                <div class="place-detail-item" id="place-modal-elevation-container" style="display: none;">
+                    <div class="place-detail-icon">
+                        <i class="fas fa-mountain"></i>
+                    </div>
+                    <div class="place-detail-info">
+                        <h4>Elevation</h4>
+                        <p id="place-modal-elevation">1500m</p>
+                    </div>
+                </div>
+                <div class="place-detail-item" id="place-modal-flood-container" style="display: none;">
+                    <div class="place-detail-icon">
+                        <i class="fas fa-water"></i>
+                    </div>
+                    <div class="place-detail-info">
+                        <h4>Flood Risk</h4>
+                        <p id="place-modal-flood">Low</p>
+                    </div>
+                </div>
+                <div class="place-detail-item" id="place-modal-route-distance-container" style="display: none;">
+                    <div class="place-detail-icon">
+                        <i class="fas fa-road"></i>
+                    </div>
+                    <div class="place-detail-info">
+                        <h4>Route Distance</h4>
+                        <p id="place-modal-route-distance">0 km</p>
+                    </div>
+                </div>
+                <div class="place-detail-item" id="place-modal-route-time-container" style="display: none;">
+                    <div class="place-detail-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="place-detail-info">
+                        <h4>Walking Time</h4>
+                        <p id="place-modal-route-time">0 min</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="place-modal-actions">
+            <button class="place-action-btn secondary" id="place-modal-close-btn">
+                <i class="fas fa-times"></i>
+                Close
+            </button>
+            <button class="place-action-btn primary" id="place-modal-navigate">
+                <i class="fas fa-route"></i>
+                Navigate Here
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- EMERGENCY MODAL -->
+<div class="modal" id="emergency-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Emergency Contacts</h3>
+            <button class="modal-close" id="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="emergency-contact">
+                <div class="contact-icon">
+                    <i class="fas fa-phone-volume"></i>
+                </div>
+                <div class="contact-info">
+                    <h4>Emergency Services</h4>
+                    <a href="tel:112" class="contact-number">112</a>
+                </div>
+            </div>
+            <div class="emergency-contact">
+                <div class="contact-icon">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <div class="contact-info">
+                    <h4>Ambulance</h4>
+                    <a href="tel:108" class="contact-number">108</a>
+                </div>
+            </div>
+            <div class="emergency-contact">
+                <div class="contact-icon">
+                    <i class="fas fa-fire-extinguisher"></i>
+                </div>
+                <div class="contact-info">
+                    <h4>Fire Service</h4>
+                    <a href="tel:101" class="contact-number">101</a>
+                </div>
+            </div>
+            <div class="emergency-contact">
+                <div class="contact-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="contact-info">
+                    <h4>Police</h4>
+                    <a href="tel:100" class="contact-number">100</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/config.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/utils.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/route.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/map.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/modal.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
