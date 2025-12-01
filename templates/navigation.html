@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hill-Safe | Navigation</title>
+    
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
+    
+    <!-- Mapbox Directions Plugin -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" type="text/css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='nav-style.css') }}">
+</head>
+<body>
+
+<div class="nav-page">
+    <!-- HEADER -->
+    <div class="nav-header">
+        <button class="back-btn" onclick="window.history.back()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1>Navigate to Building</h1>
+        <div class="header-spacer"></div>
+    </div>
+
+    <!-- MAP CONTAINER -->
+    <div class="nav-map-container">
+        <div id="nav-map"></div>
+    </div>
+
+    <!-- BUILDING INFO -->
+    <div class="building-info-panel" id="building-info">
+        <div class="empty-message">
+            <i class="fas fa-info-circle"></i>
+            <p>Select a building to navigate</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize map
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYW5pc2hyYXJ0aGljIiwiYSI6ImNtaW11eDF3ODFkNHYzZHM0YmhjZWtsY2EifQ.e348Mf0727rJCGBX7rJzpA';
+    
+    const navMap = new mapboxgl.Map({
+        container: 'nav-map',
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [77.1734, 31.1048],
+        zoom: 16,
+        pitch: 60,
+        bearing: -20
+    });
+
+    // Initialize Directions control
+    const directions = new MapboxDirections({
+        accessToken: mapboxgl.accessToken,
+        unit: 'metric',
+        profile: 'mapbox/walking',
+        controls: {
+            inputs: false,  // Hide input boxes
+            instructions: true,
+            profileSwitcher: false
+        }
+    });
+
+    // Add directions control to map
+    navMap.addControl(directions, 'top-left');
+
+
+
+    // Retrieve buildings and locations from sessionStorage
+    const buildings = JSON.parse(sessionStorage.getItem('topBuildings') || '[]');
+    const userPin = JSON.parse(sessionStorage.getItem('userPin') || 'null');
+    const searchLocation = JSON.parse(sessionStorage.getItem('searchLocation') || 'null');
+    const selectedIndex = parseInt(sessionStorage.getItem('selectedBuildingIndex') || '0');
+    
+    // Determine start location - prefer userPin, fallback to searchLocation coordinates
+    const startLocation = userPin || (searchLocation && searchLocation.coordinates) || null;
+    
+    console.log('Navigation data:', { buildings, userPin, searchLocation, selectedIndex, startLocation });
+
+    navMap.on('load', () => {
+        // Add terrain
+        navMap.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            'tileSize': 512,
+            'maxzoom': 14
+        });
+        navMap.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+
+        // Add 3D buildings layer
+        if (!navMap.getLayer('3d-buildings')) {
+            navMap.addLayer({
+                'id': '3d-buildings',
+                'source': 'composite',
+                'source-layer': 'building',
+                'filter': ['==', 'extrude', 'true'],
+                'type': 'fill-extrusion',
+                'minzoom': 14,
+                'paint': {
+                    'fill-extrusion-color': '#4CAF50',
+                    'fill-extrusion-height': ['get', 'height'],
+                    'fill-extrusion-opacity': 0.8
+                }
+            });
+        }
+
+        // Add user pin marker if available
+        if (userPin) {
+            new mapboxgl.Marker({ color: '#FF6B35' })
+                .setLngLat(userPin)
+                .setPopup(new mapboxgl.Popup().setHTML('<strong>Your Location</strong>'))
+                .addTo(navMap);
+        }
+        
+        // Add search location marker if available
+        if (searchLocation && searchLocation.coordinates) {
+            new mapboxgl.Marker({ color: '#3498db' })
+                .setLngLat(searchLocation.coordinates)
+                .setPopup(new mapboxgl.Popup().setHTML(`<strong>Search Location</strong><br>${searchLocation.name}`))
+                .addTo(navMap);
+        }
+
+        // Add building markers
+        buildings.forEach((b, idx) => {
+            const marker = new mapboxgl.Marker({ color: '#e74c3c' })
+                .setLngLat([b.lon, b.lat])
+                .setPopup(new mapboxgl.Popup().setHTML(`<strong>${b.name}</strong><br>${b.type}`))
+                .addTo(navMap);
+
+            marker.getElement().addEventListener('click', () => {
+                selectBuilding(b, idx);
+            });
+        });
+
+        // Fit map to show all buildings
+        if (buildings.length > 0 && startLocation) {
+            const bounds = new mapboxgl.LngLatBounds();
+            bounds.extend(startLocation);
+            buildings.forEach(b => bounds.extend([b.lon, b.lat]));
+            navMap.fitBounds(bounds, { padding: 100 });
+        }
+        
+        // Auto-select the clicked building
+        if (buildings.length > 0 && selectedIndex >= 0 && selectedIndex < buildings.length) {
+            setTimeout(() => selectBuilding(buildings[selectedIndex], selectedIndex), 1500);
+        }
+    });
+
+    function selectBuilding(building, index) {
+        const infoPanel = document.getElementById('building-info');
+        const height = building.height 
+            ? (typeof building.height === 'string' ? `${Math.round(parseFloat(building.height))}m` : `${Math.round(building.height)}m`)
+            : (building.levels ? `~${Math.round(parseInt(building.levels) * 3.5)}m` : '?');
+        
+        const isSafe = (parseInt(building.levels) >= 2) || (parseFloat(building.height) >= 6);
+        const badgeClass = isSafe ? 'badge-safe' : 'badge-info';
+        const badgeText = isSafe ? 'SAFE' : 'INFO';
+
+        infoPanel.innerHTML = `
+            <div class="building-info">
+                <div class="info-header">
+                    <h3>#${index + 1} - ${building.name || 'Building'}</h3>
+                    <span class="badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <p class="info-type">${building.type || 'Structure'}</p>
+                <div class="info-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-ruler-vertical"></i>
+                        <span>${height}</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-layer-group"></i>
+                        <span>${building.levels || '?'} Floors</span>
+                    </div>
+                    ${building.distance ? `<div class="stat-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${building.distance}</span>
+                    </div>` : ''}
+                </div>
+                <button class="navigate-btn" onclick="startNavigation(${building.lat}, ${building.lon})">
+                    <i class="fas fa-directions"></i> Navigate with Google Maps
+                </button>
+            </div>
+        `;
+
+        // Center map on building
+        navMap.flyTo({
+            center: [building.lon, building.lat],
+            zoom: 18,
+            duration: 1000
+        });
+    }
+
+    function startNavigation(destLat, destLon) {
+        // Use the determined start location
+        if (startLocation) {
+            console.log('Opening Google Maps from', startLocation, 'to', [destLon, destLat]);
+            // Create Google Maps URL with directions
+            const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${startLocation[1]},${startLocation[0]}&destination=${destLat},${destLon}&travelmode=walking`;
+            // Open Google Maps in a new tab
+            window.open(googleMapsUrl, '_blank');
+        } else {
+            alert('Start location not found. Please go back and search for a location or use My Location.');
+        }
+    }
+</script>
+
+</body>
+</html>

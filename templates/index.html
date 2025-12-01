@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hill-Safe | Vertical Refuge Finder</title>
+    <title>Hill-Safe | Tall Building Finder</title>
     
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
     
     <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
     <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
-    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
-    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" type="text/css">
+    
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.3.0/mapbox-gl-directions.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.3.0/mapbox-gl-directions.css" type="text/css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -19,34 +20,61 @@
 </head>
 <body>
 
-<div class="container">
-    <div class="sidebar">
-        <div class="header">
-            <h1><i class="fas fa-mountain"></i> Hill-Safe</h1>
-            <p>Vertical Refuge Locator</p>
-            <div id="user-status" class="status-text">
-                <i class="fas fa-satellite-dish"></i> Waiting for GPS...
+<!-- HOME PAGE: TOP 10 BUILDINGS LIST -->
+<div class="page-main">
+    <!-- HIDDEN MAP (Required by script for auto-pin on click) -->
+    <div id="map" class="hidden-map"></div>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-top">
+            <div class="brand">
+                <i class="fas fa-mountain"></i>
+                <div class="brand-text">
+                    <h1>Hill-Safe</h1>
+                    <p>Find Safe Places & Tall Buildings</p>
+                </div>
             </div>
         </div>
 
-        <div class="search-wrapper">
-            <div id="geocoder-container"></div>
-        </div>
-
-        <div class="building-list" id="building-list">
-            <div class="empty-state">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Loading Map...</p>
+        <!-- SEARCH BAR -->
+        <div class="search-bar-container">
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input id="search-input" type="text" placeholder="Search location..." class="search-input" autocomplete="off">
+                <div id="suggestions" class="suggestions-dropdown"></div>
             </div>
+            <button class="my-location-btn" id="my-location-btn" title="Use my location">
+                <i class="fas fa-location-crosshairs"></i>
+            </button>
         </div>
     </div>
 
-    <div class="map-wrapper">
-        <div id="map"></div>
+    <!-- MAIN CONTENT - TOP 10 LIST -->
+    <div class="content-wrapper">
+        <div class="top-ten-panel">
+            <div class="details-header">
+                <div class="header-content">
+                    <h2><i class="fas fa-shield-alt"></i> Top Safe Places</h2>
+                    <p>Hospitals, Shelters, High Ground & Tall Buildings</p>
+                </div>
+                <span class="count-badge" id="result-count">0 found</span>
+            </div>
+
+            <div class="buildings-list" id="building-list">
+                <div class="empty-message">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Ready to Find Safety?</h3>
+                    <p>Search for any location and discover safe places like hospitals, shelters, high ground, and tall buildings</p>
+                    <div class="hint-box">
+                        <i class="fas fa-lightbulb"></i> Tip: Click on the map after searching to scan that area
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script src="{{ url_for('static', filename='script.js') }}"></script>
-
 </body>
 </html>

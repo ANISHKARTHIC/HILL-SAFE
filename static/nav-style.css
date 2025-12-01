@@ -1,0 +1,251 @@
+/* ===== PROFESSIONAL THEME - NAVIGATION PAGE WITH MAP ===== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    color: #2c3e50;
+    overflow: hidden;
+}
+
+/* NAV PAGE */
+.nav-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* NAV HEADER */
+.nav-header {
+    background: white;
+    border-bottom: 2px solid #e74c3c;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.nav-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    flex: 1;
+    text-align: center;
+}
+
+.back-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.back-btn:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+}
+
+.header-spacer {
+    width: 44px;
+    flex-shrink: 0;
+}
+
+/* MAP CONTAINER */
+.nav-map-container {
+    flex: 1;
+    background: white;
+    overflow: hidden;
+    position: relative;
+}
+
+#nav-map {
+    width: 100%;
+    height: 100%;
+}
+
+/* BUILDING INFO PANEL */
+.building-info-panel {
+    background: white;
+    border-top: 1px solid #ecf0f1;
+    padding: 16px 20px;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.empty-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #95a5a6;
+    gap: 8px;
+    padding: 20px;
+}
+
+.empty-message i {
+    font-size: 32px;
+    opacity: 0.5;
+}
+
+.empty-message p {
+    font-size: 14px;
+}
+
+/* BUILDING INFO */
+.building-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    flex: 1;
+}
+
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.badge-safe {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-info {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.info-type {
+    font-size: 13px;
+    color: #7f8c8d;
+    text-transform: capitalize;
+    margin: 0;
+}
+
+/* INFO STATS */
+.info-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #ecf0f1;
+}
+
+.stat-item i {
+    color: #e74c3c;
+    font-size: 14px;
+}
+
+/* NAVIGATE BUTTON */
+.navigate-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    margin-top: 4px;
+    width: 100%;
+}
+
+.navigate-btn:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+}
+
+/* SCROLLBAR */
+.building-info-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.building-info-panel::-webkit-scrollbar-track {
+    background: #f5f7fa;
+}
+
+.building-info-panel::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 3px;
+}
+
+.building-info-panel::-webkit-scrollbar-thumb:hover {
+    background: #95a5a6;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .nav-header {
+        flex-wrap: wrap;
+    }
+
+    .nav-header h1 {
+        order: 2;
+        flex-basis: 100%;
+        text-align: left;
+        margin-top: 8px;
+    }
+
+    .back-btn {
+        order: 1;
+    }
+
+    .header-spacer {
+        display: none;
+    }
+
+    .building-info-panel {
+        max-height: 200px;
+    }
+}
